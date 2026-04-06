@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="IRR Editor favicon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#115e59" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#bg)" />
+  <path d="M20 18h6v28h-6zM30 18h8c6 0 10 4 10 10 0 5-3 9-8 10l9 8h-8l-8-8v8h-6V18zm6 6v10h2c3 0 4-2 4-5s-1-5-4-5h-2z" fill="#e6fffa" />
+</svg>
