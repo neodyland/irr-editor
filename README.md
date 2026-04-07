@@ -3,25 +3,22 @@
 IRR Editor は、JPNIC の JPIRR をメールベースで操作するためのデスクトップ Web アプリです。
 
 - Rust 側で lettre を使って JPIRR 登録メールを送信
-- Rust 側で whois コマンドを実行し、jpirr.nic.ad.jp の検索結果を確認
+- Rust 側で whois を実行し、jpirr.nic.ad.jp の検索結果を確認
 - React 側で Route/Aut-Num/AS-Set/Role/Person/Maintainer のテンプレートを簡単編集
 
 参照した利用方法:
 https://www.nic.ad.jp/doc/jpnic-01077.html
 
+## 注意
+このコードはOpenAI社のCodexを利用して作られました。
+
+当方で正常に動作するか確認しています。ですが、本アプリを利用する際は自己責任でお願いします。
+
 ## 前提
 
 1. Node/Bun 環境
 2. Rust/Tauri 環境
-3. whois コマンド
-4. SMTP サーバーへの接続情報
-
-Linux で whois 未導入の場合:
-
-```bash
-sudo apt-get update
-sudo apt-get install -y whois
-```
+3. SMTP サーバーへの接続情報
 
 ## 開発起動
 
