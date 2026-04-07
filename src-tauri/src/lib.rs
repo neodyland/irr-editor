@@ -2,7 +2,9 @@ use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use serde::{Deserialize, Serialize};
-use std::process::Command;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
+use tokio::time::{timeout, Duration};
 
 #[derive(Debug, Deserialize)]
 struct SendJpirrMailRequest {
@@ -85,27 +87,49 @@ fn send_jpirr_mail(request: SendJpirrMailRequest) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn whois_lookup(request: WhoisLookupRequest) -> Result<WhoisLookupResponse, String> {
+async fn whois_lookup(request: WhoisLookupRequest) -> Result<WhoisLookupResponse, String> {
     let query = request.query.trim();
     if query.is_empty() {
         return Err("whois クエリが空です".to_string());
     }
+    if query.contains(['\r', '\n']) {
+        return Err("whois クエリに改行は使用できません".to_string());
+    }
 
-    let output = Command::new("whois")
-        .args(["-h", "jpirr.nic.ad.jp", query])
-        .output()
-        .map_err(|e| {
-            if e.kind() == std::io::ErrorKind::NotFound {
-                "whois コマンドが見つかりません。OS に whois をインストールしてください。".to_string()
-            } else {
-                format!("whois 実行エラー: {e}")
-            }
-        })?;
+    let server = "jpirr.nic.ad.jp:43";
+
+    let mut stream = timeout(Duration::from_secs(8), TcpStream::connect(server))
+        .await
+        .map_err(|_| format!("whois 接続がタイムアウトしました: {server}"))
+        .and_then(|res| res.map_err(|e| format!("whois 接続エラー: {e}")))?;
+
+    // RFC 3912: client sends a single ASCII query line terminated by CRLF.
+    let request_line = format!("{query}\r\n");
+    timeout(Duration::from_secs(8), stream.write_all(request_line.as_bytes()))
+        .await
+        .map_err(|_| "whois リクエスト送信がタイムアウトしました".to_string())
+        .and_then(|res| res.map_err(|e| format!("whois 送信エラー: {e}")))?;
+
+    let mut raw = Vec::with_capacity(4096);
+    let mut buf = [0_u8; 1024];
+
+    loop {
+        let n = timeout(Duration::from_secs(12), stream.read(&mut buf))
+            .await
+            .map_err(|_| "whois 応答待機がタイムアウトしました".to_string())
+            .and_then(|res| res.map_err(|e| format!("whois 受信エラー: {e}")))?;
+
+        if n == 0 {
+            break;
+        }
+
+        raw.extend_from_slice(&buf[..n]);
+    }
 
     Ok(WhoisLookupResponse {
-        stdout: String::from_utf8_lossy(&output.stdout).to_string(),
-        stderr: String::from_utf8_lossy(&output.stderr).to_string(),
-        status: output.status.code().unwrap_or(-1),
+        stdout: String::from_utf8_lossy(&raw).to_string(),
+        stderr: String::new(),
+        status: 0,
     })
 }
 

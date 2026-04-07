@@ -197,9 +197,15 @@ export function SmtpMailSection({ smtpForm, sendResult, persistSmtpPatch }: Smtp
             {(isSubmitting: boolean) => (
               <button
                 type="submit"
-                className="cursor-pointer rounded-xl border border-teal-700 bg-teal-700 px-4 py-2 text-[0.95rem] text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-teal-700 bg-teal-700 px-4 py-2 text-[0.95rem] text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-70"
                 disabled={isSubmitting}
               >
+                {isSubmitting && (
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white"
+                    aria-hidden="true"
+                  />
+                )}
                 {isSubmitting ? "送信中..." : "JPIRR へメール送信"}
               </button>
             )}
